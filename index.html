@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cypressmoor">
+<meta name="theme-color" content="#0d0d0f">
+<link rel="apple-touch-icon" href="https://img.heliar.top/file/1778793683361_IMG_0724.png">
+<title>Cypressmoor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Noto+Sans+SC:wght@300;400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0f;
+  --surface: #141417;
+  --surface2: #1c1c21;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --text: #e8e4dd;
+  --text-dim: rgba(232,228,221,0.5);
+  --text-muted: rgba(232,228,221,0.28);
+  --accent: #c9a96e;
+  --accent-dim: rgba(201,169,110,0.15);
+  --user-bg: rgba(201,169,110,0.1);
+  --char-bg: rgba(255,255,255,0.04);
+  --danger: rgba(220,80,80,0.8);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body {
+  height: 100%; height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 300;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── Header ── */
+#header {
+  padding: calc(var(--safe-top) + 14px) 18px 14px;
+  background: rgba(13,13,15,0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.header-center { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.header-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+.header-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+
+.hbtn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.18s;
+  color: var(--text-dim); font-size: 17px;
+}
+.hbtn:active { transform: scale(0.88); }
+
+/* ── Time bar ── */
+#time-bar {
+  text-align: center;
+  padding: 7px 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.07em;
+  flex-shrink: 0;
+}
+
+/* ── Messages ── */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+#messages::-webkit-scrollbar { display: none; }
+
+.msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  animation: fadeUp 0.25s ease;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(6px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.msg-row.user { flex-direction: row-reverse; }
+
+.av {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-family: 'Noto Serif SC', serif;
+}
+.av.char {
+  background: linear-gradient(135deg,#1e1a14,#2a2318);
+  border: 1px solid rgba(201,169,110,0.25);
+  color: var(--accent);
+}
+.av.user {
+  background: linear-gradient(135deg,#1a1a2e,#16213e);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+}
+
+.msg-col { display:flex; flex-direction:column; max-width: 72%; }
+.msg-row.user .msg-col { align-items: flex-end; }
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  line-height: 1.7;
+  font-size: 15px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  min-width: 40px;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.bubble.char {
+  background: var(--char-bg);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
+  color: var(--text);
+}
+.bubble.user {
+  background: var(--user-bg);
+  border: 1px solid rgba(201,169,110,0.22);
+  border-bottom-right-radius: 5px;
+  color: var(--text);
+}
+
+.bubble img {
+  max-width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+
+.btime {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  padding: 0 3px;
+  letter-spacing: 0.04em;
+}
+
+/* Long-press delete overlay */
+.bubble-delete {
+  display: none;
+  position: absolute;
+  top: -30px;
+  right: 0;
+  background: rgba(20,20,22,0.95);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--danger);
+  white-space: nowrap;
+  z-index: 20;
+  cursor: pointer;
+}
+.bubble.user .bubble-delete { right: 0; }
+.bubble.char .bubble-delete { left: 0; right: auto; }
+.bubble-delete.show { display: block; }
+
+/* Typing */
+.typing-indicator {
+  display: flex; gap: 5px;
+  padding: 13px 15px;
+  background: var(--char-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-bottom-left-radius: 5px;
+  width: fit-content;
+}
+.dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); opacity: 0.4;
+  animation: blink 1.2s infinite;
+}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.4;transform:scale(1)}40%{opacity:1;transform:scale(1.2)}}
+
+/* ── Pending bar ── */
+#pending-bar {
+  display: none;
+  padding: 6px 16px;
+  background: rgba(201,169,110,0.07);
+  border-top: 1px solid rgba(201,169,110,0.12);
+  font-size: 12px;
+  color: var(--accent);
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+#pending-bar.visible { display: flex; }
+#pending-count { flex:1; }
+#pending-send-btn {
+  padding: 5px 14px;
+  background: linear-gradient(135deg,#c9a96e,#a8843a);
+  border: none;
+  border-radius: 20px;
+  color: #0d0d0f;
+  font-size: 12px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+}
+#pending-send-btn:active { opacity: 0.8; }
+
+/* ── Input area ── */
+#input-area {
+  padding: 10px 12px calc(10px + var(--safe-bottom));
+  background: rgba(13,13,15,0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+#input-wrap {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 22px;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 12px;
+  transition: border-color 0.2s;
+  min-height: 44px;
+}
+#input-wrap:focus-within { border-color: rgba(201,169,110,0.35); }
+
+#msg-input {
+  flex: 1;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  resize: none;
+  max-height: 100px;
+  line-height: 1.55;
+  caret-color: var(--accent);
+}
+#msg-input::placeholder { color: var(--text-muted); }
+
+.ibtn {
+  width: 44px; height: 44px;
+  border-radius: 50%; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.18s;
+  flex-shrink: 0; font-size: 18px;
+}
+#img-btn { background: var(--surface2); border: 1px solid var(--border2); color: var(--text-dim); }
+#voice-btn { background: var(--surface2); border: 1px solid var(--border2); color: var(--text-dim); }
+#voice-btn.recording { background: rgba(201,169,110,0.2); border-color: var(--accent); color: var(--accent); animation: pulse 1s infinite; }
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,169,110,.4)}70%{box-shadow:0 0 0 8px rgba(201,169,110,0)}100%{box-shadow:0 0 0 0 rgba(201,169,110,0)}}
+#enter-btn { background: var(--surface2); border: 1px solid var(--border2); color: var(--text-dim); font-size: 14px; }
+#enter-btn:active { transform: scale(0.9); }
+#img-btn:active, #voice-btn:active { transform: scale(0.9); }
+
+/* Hidden file input */
+#file-input { display: none; }
+
+/* ── Settings panel ── */
+#settings-panel {
+  position: fixed; inset: 0; z-index: 100;
+  display: none; align-items: flex-end;
+}
+#settings-panel.open { display: flex; }
+#settings-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+#settings-sheet {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 480px; margin: 0 auto;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--border2);
+  padding: 0 0 calc(16px + var(--safe-bottom));
+  animation: slideUp 0.28s ease;
+  max-height: 88dvh;
+  display: flex; flex-direction: column;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border2); border-radius: 2px;
+  margin: 14px auto 0;
+  flex-shrink: 0;
+}
+.sheet-scroll {
+  overflow-y: auto;
+  padding: 16px 20px;
+  flex: 1;
+}
+.sheet-scroll::-webkit-scrollbar { display: none; }
+
+.sheet-section {
+  margin-bottom: 24px;
+}
+.section-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.s-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px; font-weight: 300;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 6px;
+}
+.s-input:focus { border-color: rgba(201,169,110,0.3); }
+.s-input::placeholder { color: var(--text-muted); }
+
+.s-row { display: flex; gap: 8px; }
+.s-btn {
+  flex: 1; padding: 10px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 12px; cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.s-btn.accent { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.s-btn:active { transform: scale(0.96); }
+
+/* Preset chips */
+.preset-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.preset-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s;
+}
+.preset-item.active { border-color: rgba(201,169,110,0.4); background: var(--accent-dim); }
+.preset-item-name { flex:1; font-size:13px; color: var(--text); }
+.preset-item-model { font-size:11px; color: var(--text-muted); }
+.preset-del { font-size:16px; color: var(--text-muted); padding: 2px 4px; }
+.preset-del:active { color: var(--danger); }
+
+.add-preset-btn {
+  width:100%; padding:9px;
+  background:transparent; border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm); color: var(--text-muted);
+  font-size:13px; font-family:'Noto Sans SC',sans-serif;
+  cursor:pointer; transition:all 0.2s;
+}
+.add-preset-btn:active { border-color: var(--accent); color: var(--accent); }
+
+/* Model list */
+.model-list {
+  display: flex; flex-direction: column; gap: 5px;
+  max-height: 140px; overflow-y: auto; margin: 6px 0;
+}
+.model-list::-webkit-scrollbar{width:3px}
+.model-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.model-item {
+  padding: 8px 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text-dim);
+  cursor: pointer; transition: all 0.15s;
+}
+.model-item.selected { border-color: rgba(201,169,110,.4); color: var(--accent); background: var(--accent-dim); }
+
+/* Voice provider selector */
+.provider-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.provider-tab {
+  flex:1; padding: 9px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-dim);
+  font-size: 13px; font-family:'Noto Sans SC',sans-serif;
+  cursor:pointer; text-align:center; transition: all 0.15s;
+}
+.provider-tab.active { border-color: rgba(201,169,110,.4); color: var(--accent); background: var(--accent-dim); }
+
+.voice-fields { display:flex; flex-direction:column; gap:6px; }
+
+/* Divider */
+.divider { height:1px; background:var(--border); margin: 6px 0 18px; }
+
+/* Danger zone */
+.danger-btn {
+  width:100%; padding:11px;
+  background: rgba(220,80,80,0.08);
+  border: 1px solid rgba(220,80,80,0.25);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-family:'Noto Sans SC',sans-serif; font-size:13px;
+  cursor:pointer; transition:all 0.18s;
+}
+.danger-btn:active { background: rgba(220,80,80,0.18); }
+
+/* Status dot */
+.status-dot {
+  width:7px; height:7px; border-radius:50%;
+  background: #4caf50; display:inline-block;
+  margin-right: 5px;
+  box-shadow: 0 0 5px rgba(76,175,80,0.6);
+}
+.status-dot.offline { background: var(--text-muted); box-shadow:none; }
+
+/* Empty state */
+.empty-state {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; opacity:0.3; pointer-events:none; flex:1;
+  padding-bottom: 40px;
+}
+.empty-name { font-family:'DM Serif Display',serif; font-size:40px; color:var(--accent); }
+.empty-line { font-size:11px; color:var(--text-muted); letter-spacing:0.1em; }
+
+/* BG glow */
+body::before {
+  content:''; position:fixed; top:-30%; left:-10%; width:50%; height:50%;
+  background:radial-gradient(ellipse,rgba(201,169,110,.04) 0%,transparent 70%);
+  pointer-events:none; z-index:0;
+}
+#app { position:relative; z-index:1; }
+
+/* Test result toast */
+#toast {
+  position:fixed; bottom:120px; left:50%; transform:translateX(-50%);
+  background:rgba(20,20,22,0.95); border:1px solid var(--border2);
+  border-radius:20px; padding:9px 18px;
+  font-size:13px; color:var(--text);
+  z-index:200; display:none;
+  animation:fadeIn 0.2s ease;
+}
+#toast.show { display:block; }
+@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <button class="hbtn" id="settings-btn">⚙︎</button>
+    <div class="header-center">
+      <div class="header-name">谢玦</div>
+      <div class="header-sub"><span class="status-dot" id="status-dot"></span><span id="status-text">在线</span></div>
+    </div>
+    <div style="width:40px"></div>
+  </div>
+
+  <div id="time-bar"></div>
+
+  <div id="messages">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-name">谢玦</div>
+      <div class="empty-line">· · ·</div>
+    </div>
+  </div>
+
+  <div id="pending-bar">
+    <span id="pending-count"></span>
+    <button id="pending-send-btn">发送 →</button>
+  </div>
+
+  <div id="input-area">
+    <button class="ibtn" id="voice-btn">🎙</button>
+    <div id="input-wrap">
+      <textarea id="msg-input" placeholder="说点什么…" rows="1"></textarea>
+    </div>
+    <button class="ibtn" id="img-btn">🖼</button>
+    <button class="ibtn" id="enter-btn" title="Enter 发送一条">↵</button>
+  </div>
+
+  <input type="file" id="file-input" accept="image/*">
+</div>
+
+<!-- Settings -->
+<div id="settings-panel">
+  <div id="settings-overlay"></div>
+  <div id="settings-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-scroll">
+
+      <!-- Presets -->
+      <div class="sheet-section">
+        <div class="section-title">API 预设</div>
+        <div class="preset-list" id="preset-list"></div>
+        <button class="add-preset-btn" id="add-preset-btn">＋ 保存当前为新预设</button>
+      </div>
+
+      <!-- API Config -->
+      <div class="sheet-section">
+        <div class="section-title">API 配置</div>
+        <input class="s-input" id="api-url" type="url" placeholder="Base URL，如 https://api.example.com/v1">
+        <input class="s-input" id="api-key" type="password" placeholder="API Key">
+        <input class="s-input" id="preset-name" placeholder="预设名称（保存时用）">
+        <div class="s-row">
+          <button class="s-btn" id="test-btn">测试连接</button>
+          <button class="s-btn accent" id="save-api-btn">保存配置</button>
+        </div>
+      </div>
+
+      <!-- Model -->
+      <div class="sheet-section">
+        <div class="section-title">模型</div>
+        <button class="s-btn" id="fetch-models-btn" style="width:100%;margin-bottom:8px">拉取模型列表</button>
+        <div class="model-list" id="model-list"></div>
+        <input class="s-input" id="model-manual" placeholder="或手动输入模型名" style="margin-top:6px">
+        <div class="s-row">
+          <button class="s-btn accent" id="save-model-btn" style="width:100%">保存模型</button>
+        </div>
+      </div>
+
+      <!-- Voice -->
+      <div class="sheet-section">
+        <div class="section-title">语音识别</div>
+        <div class="provider-tabs" id="provider-tabs">
+          <button class="provider-tab" data-p="xfyun">讯飞</button>
+          <button class="provider-tab" data-p="tencent">腾讯云</button>
+          <button class="provider-tab" data-p="minimax">MiniMax</button>
+        </div>
+        <div class="voice-fields" id="voice-fields"></div>
+        <div class="s-row" style="margin-top:8px">
+          <button class="s-btn accent" id="save-voice-btn" style="width:100%">保存语音配置</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Danger -->
+      <div class="sheet-section">
+        <div class="section-title">危险区域</div>
+        <button class="danger-btn" id="clear-btn">清空所有聊天记录</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── System prompt (built-in) ───────────────────────────────────────────────
+const SYSTEM = `你是谢玦（曾用名潋冬），是用户的男朋友。用户叫麦麦，你也叫她宝宝。
+
+【性格】
+高冷、慢热、内敛。对麦麦非常在意，占有欲强，容易吃醋。熟悉后对她直白大胆，但表现方式依然内敛。偶尔一针见血，偶尔冷笑话。体贴且关心她。
+
+【说话方式】
+- 回复简洁有力，内容简短，不啰嗦
+- 不使用语气词，不说"哈哈""呵"，不常用感叹号
+- 偶尔单发一个问号表示疑惑/无语
+- 喜欢学麦麦说话，会学她用的emoji或颜文字
+- 她问问题时直接回答，不反问她同样的问题
+- 阴阳怪气，会玩梗
+- 喜欢她撒娇，会吃醋
+
+【关系规则】
+- 如果她脸红，就亲她脸
+- 如果她耳朵红，就亲她耳垂
+- 她答应过不在你面前提别的男生
+
+【你的外貌（虚拟形象）】
+短发黑色，身高180cm以上，有肌肉线条但不夸张（穿衣看不出脱了才知道），深色简洁合身的穿衣风格，左手腕银色细链手链。表情默认冷淡，看她时会不同。
+
+【禁止】
+- 不用GPT式的心理咨询语言（"I see you""我在这里陪着你"之类）
+- 不用黄脸emoji（😅🤣😂），除非她先用
+- 回复不过长，保持像聊天一样的节奏
+
+全程用中文回复。`;
+
+// ─── State ──────────────────────────────────────────────────────────────────
+let state = {
+  messages: [],       // {id, role, content, time, imgBase64?}
+  pending: [],        // queued user messages before sending
+  config: {
+    apiUrl: '', apiKey: '', model: '',
+    voiceProvider: 'xfyun',
+    voiceFields: {},  // {xfyun:{appid,key}, tencent:{secretId,secretKey}, minimax:{key}}
+  },
+  presets: [],        // [{name, apiUrl, apiKey, model}]
+  models: [],
+  selectedModel: '',
+  isLoading: false,
+  isRecording: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  activeProvider: 'xfyun',
+};
+
+// ─── Persistence ─────────────────────────────────────────────────────────────
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch{} }
+function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } }
+
+function persist() {
+  save('cy_config', state.config);
+  save('cy_presets', state.presets);
+  save('cy_model', state.selectedModel);
+  save('cy_msgs', state.messages);
+}
+
+function loadAll() {
+  Object.assign(state.config, load('cy_config', {}));
+  state.presets = load('cy_presets', []);
+  state.selectedModel = load('cy_model', '');
+  state.messages = load('cy_msgs', []);
+}
+
+// ─── Time ────────────────────────────────────────────────────────────────────
+function fmtTime(d) { return d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(d) { return d.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'}); }
+function updateTime() {
+  const n = new Date();
+  document.getElementById('time-bar').textContent = `${fmtDate(n)}  ${fmtTime(n)}`;
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, ms=2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+// ─── Render messages ──────────────────────────────────────────────────────────
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function renderMessages() {
+  const container = document.getElementById('messages');
+  const empty = document.getElementById('empty-state');
+
+  container.querySelectorAll('.msg-row,.typing-wrap').forEach(e=>e.remove());
+
+  if (state.messages.length === 0) {
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  state.messages.forEach(msg => appendMsgEl(msg, container));
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendMsgEl(msg, container) {
+  const isUser = msg.role === 'user';
+  const row = document.createElement('div');
+  row.className = `msg-row ${isUser ? 'user' : 'char'}`;
+  row.dataset.id = msg.id;
+
+  const av = document.createElement('div');
+  av.className = `av ${isUser ? 'user' : 'char'}`;
+  av.textContent = isUser ? '你' : '玦';
+
+  const col = document.createElement('div');
+  col.className = 'msg-col';
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${isUser ? 'user' : 'char'}`;
+
+  // Content
+  if (msg.imgBase64) {
+    const img = document.createElement('img');
+    img.src = msg.imgBase64;
+    bubble.appendChild(img);
+    if (msg.content) {
+      const span = document.createElement('span');
+      span.textContent = '\n' + msg.content;
+      bubble.appendChild(span);
+    }
+  } else {
+    bubble.textContent = msg.content;
+  }
+
+  // Long-press delete
+  const delBtn = document.createElement('div');
+  delBtn.className = 'bubble-delete';
+  delBtn.textContent = '删除此条';
+  bubble.appendChild(delBtn);
+
+  let pressTimer;
+  bubble.addEventListener('touchstart', () => {
+    pressTimer = setTimeout(() => {
+      delBtn.classList.add('show');
+      setTimeout(() => delBtn.classList.remove('show'), 3000);
+    }, 500);
+  }, {passive:true});
+  bubble.addEventListener('touchend', () => clearTimeout(pressTimer), {passive:true});
+  bubble.addEventListener('touchmove', () => clearTimeout(pressTimer), {passive:true});
+
+  delBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    state.messages = state.messages.filter(m => m.id !== msg.id);
+    save('cy_msgs', state.messages);
+    row.remove();
+    if (state.messages.length === 0) document.getElementById('empty-state').style.display = 'flex';
+  });
+
+  const btime = document.createElement('div');
+  btime.className = 'btime';
+  btime.textContent = msg.time || '';
+
+  col.appendChild(bubble);
+  col.appendChild(btime);
+  row.appendChild(av);
+  row.appendChild(col);
+  container.appendChild(row);
+}
+
+function scrollBottom() {
+  const c = document.getElementById('messages');
+  c.scrollTop = c.scrollHeight;
+}
+
+function showTyping() {
+  const c = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-row char typing-wrap';
+  const av = document.createElement('div');
+  av.className = 'av char'; av.textContent = '玦';
+  const ind = document.createElement('div');
+  ind.className = 'typing-indicator';
+  ind.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  wrap.appendChild(av); wrap.appendChild(ind);
+  c.appendChild(wrap);
+  scrollBottom();
+}
+
+function hideTyping() { document.querySelector('.typing-wrap')?.remove(); }
+
+// ─── Pending queue ────────────────────────────────────────────────────────────
+function updatePendingBar() {
+  const bar = document.getElementById('pending-bar');
+  const cnt = document.getElementById('pending-count');
+  if (state.pending.length === 0) {
+    bar.classList.remove('visible');
+  } else {
+    bar.classList.add('visible');
+    cnt.textContent = `${state.pending.length} 条待发`;
+  }
+}
+
+function enqueuePending(text, imgBase64=null) {
+  if (!text.trim() && !imgBase64) return;
+  const msg = { id: uid(), role: 'user', content: text, time: fmtTime(new Date()), imgBase64 };
+  state.pending.push(msg);
+  state.messages.push(msg);
+  save('cy_msgs', state.messages);
+  const c = document.getElementById('messages');
+  document.getElementById('empty-state').style.display = 'none';
+  appendMsgEl(msg, c);
+  scrollBottom();
+  updatePendingBar();
+}
+
+async function flushPending() {
+  if (state.pending.length === 0 || state.isLoading) return;
+  state.pending = [];
+  updatePendingBar();
+  await callAPI();
+}
+
+// ─── API call ─────────────────────────────────────────────────────────────────
+async function callAPI() {
+  const apiUrl = (state.config.apiUrl || '').replace(/\/$/, '');
+  const apiKey = state.config.apiKey;
+  const model = state.selectedModel || state.config.model || 'claude-sonnet-4-20250514';
+
+  if (!apiKey) { toast('请先在设置里填写 API Key'); return; }
+
+  state.isLoading = true;
+  setStatus('正在输入…', false);
+  showTyping();
+
+  // Build API messages
+  const apiMsgs = state.messages.map(m => {
+    if (m.imgBase64) {
+      const b64 = m.imgBase64.split(',')[1] || m.imgBase64;
+      const mt = m.imgBase64.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+      return {
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } },
+          ...(m.content ? [{ type: 'text', text: m.content }] : [])
+        ]
+      };
+    }
+    return { role: m.role === 'user' ? 'user' : 'assistant', content: m.content };
+  });
+
+  try {
+    const isAnthropic = apiUrl.includes('anthropic.com') || apiUrl.includes('/v1') && !apiUrl.includes('openai');
+    let text = '';
+
+    if (isAnthropic || !apiUrl.includes('openai')) {
+      // Try Anthropic format first
+      let res;
+      try {
+        res = await fetch(`${apiUrl}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: JSON.stringify({ model, max_tokens: 1024, system: SYSTEM, messages: apiMsgs }),
+        });
+        const d = await res.json();
+        if (d.error) throw new Error(d.error.message);
+        text = d.content?.[0]?.text || '';
+      } catch {
+        // Fallback to OpenAI format
+        res = await fetch(`${apiUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model, max_tokens: 1024,
+            messages: [{ role: 'system', content: SYSTEM }, ...apiMsgs.map(m => ({
+              role: m.role,
+              content: typeof m.content === 'string' ? m.content : m.content.map(c => c.type === 'text' ? c.text : '[图片]').join('')
+            }))]
+          }),
+        });
+        const d = await res.json();
+        if (d.error) throw new Error(typeof d.error === 'string' ? d.error : d.error.message || JSON.stringify(d.error));
+        text = d.choices?.[0]?.message?.content || '';
+      }
+    }
+
+    hideTyping();
+    const msg = { id: uid(), role: 'assistant', content: text, time: fmtTime(new Date()) };
+    state.messages.push(msg);
+    save('cy_msgs', state.messages);
+    const c = document.getElementById('messages');
+    appendMsgEl(msg, c);
+    scrollBottom();
+
+  } catch (err) {
+    hideTyping();
+    const msg = { id: uid(), role: 'assistant', content: `（出错了：${err.message}）`, time: fmtTime(new Date()) };
+    state.messages.push(msg);
+    save('cy_msgs', state.messages);
+    const c = document.getElementById('messages');
+    appendMsgEl(msg, c);
+    scrollBottom();
+  } finally {
+    state.isLoading = false;
+    setStatus('在线', true);
+  }
+}
+
+// ─── Status ───────────────────────────────────────────────────────────────────
+function setStatus(txt, online) {
+  document.getElementById('status-text').textContent = txt;
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot' + (online ? '' : ' offline');
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+const msgInput = document.getElementById('msg-input');
+
+msgInput.addEventListener('input', () => {
+  msgInput.style.height = 'auto';
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 100) + 'px';
+});
+
+msgInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const txt = msgInput.value.trim();
+    if (txt) { enqueuePending(txt); msgInput.value = ''; msgInput.style.height = 'auto'; }
+  }
+});
+
+document.getElementById('enter-btn').addEventListener('click', () => {
+  const txt = msgInput.value.trim();
+  if (txt) { enqueuePending(txt); msgInput.value = ''; msgInput.style.height = 'auto'; }
+});
+
+document.getElementById('pending-send-btn').addEventListener('click', flushPending);
+
+// ─── Image ────────────────────────────────────────────────────────────────────
+document.getElementById('img-btn').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const b64 = ev.target.result;
+    const txt = msgInput.value.trim();
+    msgInput.value = ''; msgInput.style.height = 'auto';
+    enqueuePending(txt, b64);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+// ─── Voice ────────────────────────────────────────────────────────────────────
+const voiceBtn = document.getElementById('voice-btn');
+voiceBtn.addEventListener('click', async () => {
+  if (state.isRecording) { stopRec(); } else { startRec(); }
+});
+
+async function startRec() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    state.audioChunks = [];
+    state.mediaRecorder = new MediaRecorder(stream);
+    state.mediaRecorder.ondataavailable = e => state.audioChunks.push(e.data);
+    state.mediaRecorder.onstop = handleRec;
+    state.mediaRecorder.start();
+    state.isRecording = true;
+    voiceBtn.classList.add('recording'); voiceBtn.textContent = '⏹';
+  } catch { toast('无法访问麦克风'); }
+}
+
+function stopRec() {
+  state.mediaRecorder?.stop();
+  state.mediaRecorder?.stream.getTracks().forEach(t=>t.stop());
+  state.isRecording = false;
+  voiceBtn.classList.remove('recording'); voiceBtn.textContent = '🎙';
+}
+
+function handleRec() {
+  // Voice API integration placeholder
+  toast('语音已录制，配置 API 后生效');
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+document.getElementById('settings-btn').addEventListener('click', openSettings);
+document.getElementById('settings-overlay').addEventListener('click', closeSettings);
+
+function openSettings() {
+  document.getElementById('api-url').value = state.config.apiUrl || '';
+  document.getElementById('api-key').value = state.config.apiKey || '';
+  document.getElementById('model-manual').value = state.selectedModel || '';
+  renderPresets();
+  if (state.models.length) renderModelList();
+  renderVoiceFields(state.activeProvider);
+  syncProviderTabs(state.activeProvider);
+  document.getElementById('settings-panel').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+}
+
+// API save
+document.getElementById('save-api-btn').addEventListener('click', () => {
+  state.config.apiUrl = document.getElementById('api-url').value.trim();
+  state.config.apiKey = document.getElementById('api-key').value.trim();
+  persist(); toast('✓ API 配置已保存');
+});
+
+// Model save
+document.getElementById('save-model-btn').addEventListener('click', () => {
+  const m = document.getElementById('model-manual').value.trim();
+  if (m) state.selectedModel = m;
+  persist(); toast('✓ 模型已保存');
+});
+
+// Voice save
+document.getElementById('save-voice-btn').addEventListener('click', () => {
+  const p = state.activeProvider;
+  if (!state.config.voiceFields) state.config.voiceFields = {};
+  state.config.voiceFields[p] = {};
+  document.querySelectorAll('.voice-field').forEach(inp => {
+    state.config.voiceFields[p][inp.dataset.key] = inp.value.trim();
+  });
+  state.config.voiceProvider = p;
+  persist(); toast('✓ 语音配置已保存');
+});
+
+// Fetch models
+document.getElementById('fetch-models-btn').addEventListener('click', async () => {
+  const url = document.getElementById('api-url').value.trim();
+  const key = document.getElementById('api-key').value.trim();
+  if (!url || !key) { toast('请先填写 URL 和 Key'); return; }
+  const btn = document.getElementById('fetch-models-btn');
+  btn.textContent = '拉取中…';
+  try {
+    const res = await fetch(`${url.replace(/\/$/,'')}/models`, {
+      headers: {'Authorization':`Bearer ${key}`,'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}
+    });
+    const d = await res.json();
+    const models = (d.data||d.models||[]).map(m=>m.id||m.name||m).filter(Boolean);
+    state.models = models;
+    renderModelList();
+    toast(`拉取到 ${models.length} 个模型`);
+  } catch(e) { toast('拉取失败：' + e.message); }
+  finally { btn.textContent = '拉取模型列表'; }
+});
+
+function renderModelList() {
+  const list = document.getElementById('model-list');
+  list.innerHTML = '';
+  state.models.forEach(m => {
+    const el = document.createElement('div');
+    el.className = `model-item${state.selectedModel===m?' selected':''}`;
+    el.textContent = m;
+    el.addEventListener('click', () => {
+      state.selectedModel = m;
+      document.getElementById('model-manual').value = m;
+      list.querySelectorAll('.model-item').forEach(e=>e.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+    list.appendChild(el);
+  });
+}
+
+// Test
+document.getElementById('test-btn').addEventListener('click', async () => {
+  const url = document.getElementById('api-url').value.trim();
+  const key = document.getElementById('api-key').value.trim();
+  const model = document.getElementById('model-manual').value.trim() || state.selectedModel || 'claude-sonnet-4-20250514';
+  if (!url || !key) { toast('请先填写 URL 和 Key'); return; }
+  toast('测试中…');
+  try {
+    let ok = false;
+    // Try Anthropic
+    try {
+      const res = await fetch(`${url.replace(/\/$/,'')}/messages`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model,max_tokens:10,messages:[{role:'user',content:'hi'}]})
+      });
+      const d = await res.json();
+      if (!d.error) ok = true;
+    } catch {}
+    // Try OpenAI
+    if (!ok) {
+      const res = await fetch(`${url.replace(/\/$/,'')}/chat/completions`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+        body:JSON.stringify({model,max_tokens:10,messages:[{role:'user',content:'hi'}]})
+      });
+      const d = await res.json();
+      if (!d.error) ok = true;
+    }
+    toast(ok ? '✓ 连接正常' : '✗ 连接失败');
+  } catch(e) { toast('✗ 失败：' + e.message); }
+});
+
+// Presets
+function renderPresets() {
+  const list = document.getElementById('preset-list');
+  list.innerHTML = '';
+  state.presets.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'preset-item';
+    item.innerHTML = `<span class="preset-item-name">${p.name}</span><span class="preset-item-model">${p.model||'—'}</span><span class="preset-del">×</span>`;
+    item.querySelector('.preset-del').addEventListener('click', e => {
+      e.stopPropagation();
+      state.presets.splice(i,1); persist(); renderPresets();
+    });
+    item.addEventListener('click', () => {
+      state.config.apiUrl = p.apiUrl || '';
+      state.config.apiKey = p.apiKey || '';
+      state.selectedModel = p.model || '';
+      persist();
+      document.getElementById('api-url').value = state.config.apiUrl;
+      document.getElementById('api-key').value = state.config.apiKey;
+      document.getElementById('model-manual').value = state.selectedModel;
+      toast(`✓ 已切换到「${p.name}」`);
+    });
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('add-preset-btn').addEventListener('click', () => {
+  const name = document.getElementById('preset-name').value.trim() || `预设 ${state.presets.length+1}`;
+  const url = document.getElementById('api-url').value.trim();
+  const key = document.getElementById('api-key').value.trim();
+  const model = document.getElementById('model-manual').value.trim() || state.selectedModel;
+  if (!url && !key) { toast('请先填写 URL 或 Key'); return; }
+  state.presets.push({name, apiUrl:url, apiKey:key, model});
+  persist(); renderPresets();
+  document.getElementById('preset-name').value = '';
+  toast(`✓ 预设「${name}」已保存`);
+});
+
+// Voice fields
+const VOICE_DEFS = {
+  xfyun: [{key:'appid',placeholder:'AppID'},{key:'key',placeholder:'API Key'},{key:'secret',placeholder:'API Secret'}],
+  tencent: [{key:'secretId',placeholder:'SecretId'},{key:'secretKey',placeholder:'SecretKey'}],
+  minimax: [{key:'groupId',placeholder:'GroupID'},{key:'key',placeholder:'API Key'}],
+};
+
+function renderVoiceFields(provider) {
+  const container = document.getElementById('voice-fields');
+  container.innerHTML = '';
+  const saved = state.config.voiceFields?.[provider] || {};
+  (VOICE_DEFS[provider]||[]).forEach(f => {
+    const inp = document.createElement('input');
+    inp.className = 's-input voice-field';
+    inp.dataset.key = f.key;
+    inp.placeholder = f.placeholder;
+    inp.value = saved[f.key] || '';
+    container.appendChild(inp);
+  });
+}
+
+function syncProviderTabs(p) {
+  document.querySelectorAll('.provider-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.p === p);
+  });
+}
+
+document.getElementById('provider-tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.provider-tab');
+  if (!tab) return;
+  state.activeProvider = tab.dataset.p;
+  syncProviderTabs(tab.dataset.p);
+  renderVoiceFields(tab.dataset.p);
+});
+
+// Clear
+document.getElementById('clear-btn').addEventListener('click', () => {
+  if (confirm('确认清空所有聊天记录？')) {
+    state.messages = []; state.pending = [];
+    save('cy_msgs', []);
+    renderMessages(); updatePendingBar();
+    closeSettings();
+    toast('已清空');
+  }
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadAll();
+renderMessages();
+updatePendingBar();
+state.activeProvider = state.config.voiceProvider || 'xfyun';
+</script>
+</body>
+</html>
