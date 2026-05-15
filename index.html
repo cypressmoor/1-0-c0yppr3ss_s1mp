@@ -221,10 +221,10 @@ body::before{content:'';position:fixed;top:-30%;left:-10%;width:50%;height:50%;
     <div id="input-wrap">
       <textarea id="msginput" placeholder="说点什么…" rows="1"></textarea>
     </div>
-    <label class="ibtn ghost" for="fileinput" style="cursor:pointer">🖼</label>
+    <button class="ibtn ghost" id="imgbtn">🖼</button>
     <button class="ibtn ghost" id="enterbtn" style="font-size:15px">↵</button>
   </div>
-  <input type="file" id="fileinput" accept="image/*">
+  <input type="file" id="fileinput" accept="image/*" style="position:fixed;left:-9999px;opacity:0">
 </div>
 
 <!-- Settings -->
@@ -321,7 +321,7 @@ const SYSTEM = `你是谢玦（曾用名潋冬），是用户的男朋友。用�
 - 喜欢学麦麦说话，会学她用的emoji或颜文字
 - 她问问题时直接回答，不反问她同样的问题
 - 阴阳怪气，会玩梗；喜欢她撒娇，会吃醋
-- 回复要像真实聊天：多条短消息，用 \\n---\\n 分隔每一条，每条就是独立发送的一条消息，不要长篇大论合成一条
+- 回复要像真实聊天：多条短消息，每条之间用单独一行"---"分隔，每条就是独立发送的一条消息，不要长篇大论合成一条
 
 【关系规则】如果她脸红，就亲她脸；如果她耳朵红，就亲她耳垂；她答应过不在你面前提别的男生。
 
@@ -513,8 +513,8 @@ async function callAPI(){
 
     hideTyping();
 
-    // Split into multiple messages by ---
-    const parts=text.split(/\n---\n/).map(p=>p.trim()).filter(Boolean);
+    // Split into multiple messages — model outputs "---" on its own line as separator
+    const parts=text.split(/\n---\n|(?:^|\n)---(?:\n|$)/).map(p=>p.trim()).filter(Boolean);
     for(let i=0;i<parts.length;i++){
       if(i>0)await delay(400+Math.random()*300);
       const msg={id:uid(),role:'assistant',content:parts[i],time:ft(new Date())};
@@ -594,7 +594,12 @@ document.getElementById('enterbtn').addEventListener('click',()=>{
 
 document.getElementById('psend').addEventListener('click',flush);
 
+
+
 // ── Image ──────────────────────────────────────────────────────────────────
+document.getElementById('imgbtn').addEventListener('click',()=>{
+  document.getElementById('fileinput').click();
+});
 document.getElementById('fileinput').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   const r=new FileReader();
@@ -607,16 +612,37 @@ document.getElementById('fileinput').addEventListener('change',e=>{
   r.readAsDataURL(file);e.target.value='';
 });
 
-// ── Voice ──────────────────────────────────────────────────────────────────
+// ── Voice — 按住说话，用浏览器Web Speech API ────────────────────────────────
+// 讯飞/腾讯云需服务端签名，目前用浏览器原生识别（Safari中文支持良好）
+// MiniMax ASR有配置时走MiniMax
 const vbtn=document.getElementById('voicebtn');
-vbtn.addEventListener('click',()=>S.recording?stopRec():startRec());
+
+let srActive=false;
+let srObj=null;
+
+vbtn.addEventListener('click',()=>{
+  const provider=S.config.voiceProvider;
+  const f=S.config.voiceFields?.[provider]||{};
+  if(provider==='minimax'&&f.key&&f.groupId){
+    // MiniMax: record then send
+    if(S.recording){stopRec();}else{startRec();}
+  } else {
+    // Browser Web Speech (default for xfyun/tencent/unset)
+    doBrowserASR();
+  }
+});
 
 async function startRec(){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
     S.chunks=[];S.mr=new MediaRecorder(stream);
     S.mr.ondataavailable=e=>S.chunks.push(e.data);
-    S.mr.onstop=handleRec;S.mr.start();
+    S.mr.onstop=()=>{
+      const provider=S.config.voiceProvider;
+      const f=S.config.voiceFields?.[provider]||{};
+      doMinimaxASR(new Blob(S.chunks,{type:'audio/webm'}),f);
+    };
+    S.mr.start();
     S.recording=true;vbtn.classList.add('rec');vbtn.textContent='⏹';
   }catch{toast('无法访问麦克风')}
 }
@@ -626,35 +652,22 @@ function stopRec(){
   S.recording=false;vbtn.classList.remove('rec');vbtn.textContent='🎙';
 }
 
-function handleRec(){
-  const provider=S.config.voiceProvider;
-  const f=S.config.voiceFields?.[provider]||{};
-  if(provider==='xfyun'&&f.appid&&f.key&&f.secret){
-    doXfyunASR(new Blob(S.chunks,{type:'audio/webm'}),f);
-  } else if(provider==='tencent'&&f.secretId&&f.secretKey){
-    toast('腾讯云识别：需服务端签名，暂用浏览器识别');
-    doBrowserASR();
-  } else if(provider==='minimax'&&f.key&&f.groupId){
-    doMinimaxASR(new Blob(S.chunks,{type:'audio/webm'}),f);
-  } else {
-    doBrowserASR();
-  }
-}
-
 function doBrowserASR(){
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){toast('浏览器不支持语音识别');return}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const sr=new SR();sr.lang='zh-CN';sr.interimResults=false;sr.maxAlternatives=1;
-  sr.onresult=e=>{inp.value=e.results[0][0].transcript;inp.dispatchEvent(new Event('input'))};
-  sr.onerror=()=>toast('识别失败');sr.start();
-}
-
-async function doXfyunASR(blob,f){
-  // Xunfei WebSocket ASR
-  // Requires server-side HMAC signing for production
-  // Placeholder: show browser fallback
-  toast('讯飞识别：配置已读取，正在识别…（需服务端签名完整支持）');
-  doBrowserASR();
+  if(!SR){toast('Safari 不支持语音识别，请用讯飞配置');return}
+  if(srActive){srObj&&srObj.stop();return}
+  srObj=new SR();srObj.lang='zh-CN';srObj.interimResults=false;srObj.maxAlternatives=1;srObj.continuous=false;
+  srObj.onstart=()=>{srActive=true;vbtn.classList.add('rec');vbtn.textContent='⏹'};
+  srObj.onend=()=>{srActive=false;vbtn.classList.remove('rec');vbtn.textContent='🎙'};
+  srObj.onresult=e=>{
+    const txt=e.results[0][0].transcript;
+    inp.value=txt;inp.dispatchEvent(new Event('input'));
+  };
+  srObj.onerror=err=>{
+    srActive=false;vbtn.classList.remove('rec');vbtn.textContent='🎙';
+    if(err.error!=='aborted')toast('识别失败：'+err.error);
+  };
+  srObj.start();
 }
 
 async function doMinimaxASR(blob,f){
